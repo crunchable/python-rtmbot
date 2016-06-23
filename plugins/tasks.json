@@ -1,0 +1,8 @@
+{
+  "gettimezone": {
+    "instruction": "'Search google for the timezone of the given city'"
+  }, 
+  "localtime": {
+    "instruction": "'Search google for \"current time in ...\" for the given place'"
+  }
+}
