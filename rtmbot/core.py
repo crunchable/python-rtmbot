@@ -62,6 +62,7 @@ class RtmBot(object):
     def _start(self):
         self.connect()
         self.load_plugins()
+        self.get_user_info()
         while True:
             for reply in self.slack_client.rtm_read():
                 self.input(reply)
@@ -69,6 +70,11 @@ class RtmBot(object):
             self.output()
             self.autoping()
             time.sleep(.1)
+    
+    def get_user_info(self):
+        user_info = self.slack_client.api_call('auth.test')
+        user_info['type'] = 'user_info'
+        self.input(user_info)
 
     def start(self):
         if 'DAEMON' in self.config:
