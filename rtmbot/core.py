@@ -108,7 +108,10 @@ class RtmBot(object):
                     if limiter:
                         time.sleep(.1)
                         limiter = False
-                    channel.send_message(output[1])
+                    if output[1] == 'TYPING':
+                        channel.server.send_to_websocket({"type": "typing", "channel": channel.id})
+                    else:
+                        channel.send_message(output[1])
                     limiter = True
 
     def crons(self):

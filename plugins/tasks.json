@@ -1,4 +1,10 @@
 {
+  "findfounders": {
+    "instruction": "Search for the company name mentioned in the attachment in <http://crunchbase.com> and look for name of the founders.\nIf the copmany is not found in crunchbase.com, try to research <http://linkedin.com> and find out who is the founder of that company."
+  }, 
+  "maleorfem": {
+    "instruction": "Is this person Male of Female?"
+  }, 
   "gettimezone": {
     "instruction": "'Search google for the timezone of the given city'"
   }, 
