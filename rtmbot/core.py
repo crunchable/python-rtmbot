@@ -70,7 +70,7 @@ class RtmBot(object):
             self.output()
             self.autoping()
             time.sleep(.1)
-    
+   
     def get_user_info(self):
         user_info = self.slack_client.api_call('auth.test')
         user_info['type'] = 'user_info'
@@ -110,6 +110,15 @@ class RtmBot(object):
                         limiter = False
                     if output[1] == 'TYPING':
                         channel.server.send_to_websocket({"type": "typing", "channel": channel.id})
+                    elif output[1] == 'DM':
+                        try:
+                            user, text = output[2:]
+                            dm_channel_request = self.slack_client.api_call('im.open', user=user)
+                            dm_channel_id = dm_channel_request['channel']['id']
+                            dm_channel = self.slack_client.server.channels.find(dm_channel_id)
+                            dm_channel.send_message(text)
+                        except Exception as e:
+                            logging.error('error sending DM: {}'.format(e))
                     else:
                         channel.send_message(output[1])
                     limiter = True
