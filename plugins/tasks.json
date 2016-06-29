@@ -2,6 +2,9 @@
   "findfounders": {
     "instruction": "Search for the company name mentioned in the attachment in <http://crunchbase.com> and look for name of the founders.\nIf the copmany is not found in crunchbase.com, try to research <http://linkedin.com> and find out who is the founder of that company."
   }, 
+  "find_linkedin_profile": {
+    "instruction": "go to <http://linkedin.com> and look for the given name. return the URL as the response."
+  }, 
   "maleorfem": {
     "instruction": "Is this person Male of Female?"
   }, 

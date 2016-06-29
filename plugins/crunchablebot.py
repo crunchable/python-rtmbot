@@ -24,6 +24,12 @@ def respond_to_user(channel, user, text):
     else:
         respond(channel, '<@{}>: '.format(user) + text)
 
+def dm_to_user(channel, user, text):
+    if channel.startswith('D'): #private chat
+        respond(channel, text)
+    else:
+        outputs.append([channel, 'DM', user, text])
+
 def head(text):
     try:
         first, rest = text.split(None, 1)
@@ -95,9 +101,9 @@ def crunchable_autolearn_task(channel, user, text):
         return
     task = {'instruction': instruction}
     add_new_task(identifier, task)
-    respond_to_user(channel, user, "I learned something new today!")
-    respond(channel, "@crunchable-bot {} <text> --- {}".format(identifier, instruction))
-    trigger_known_instruction(channel, user, task, text)
+    dm_to_user(channel, user, "I learned something new today!")
+    dm_to_user(channel, user, "@crunchable-bot {} <text> --- {}".format(identifier, instruction))
+    trigger_known_instruction(channel, user, task, text, text)
 
 def learn_new_instruction(channel, text, override=False):
     identifier, instruction = head(text)
@@ -113,6 +119,7 @@ def learn_new_instruction(channel, text, override=False):
 
 def handle_unrecognized_commmand(channel, user, text):
     respond(channel, "TYPING")
+    respond_to_user(channel, user, "I'm on it!")
     task_identifier = crunchable_recognize_task(text)
     if task_identifier == NOT_A_REQUEST:
         return respond_to_user(channel, user, "Sorry, I didn't understand you")
@@ -124,12 +131,12 @@ def handle_unrecognized_commmand(channel, user, text):
     tasks = get_tasks()
     identifier = task_identifier.split(':')[0]
     task = tasks[identifier]
-    trigger_known_instruction(channel, user, task, text)
+    trigger_known_instruction(channel, user, task, text, text)
 
-def trigger_known_instruction(channel, user, task, text):
-    respond(channel, "I'm on it, <@{}> !".format(user))
+def trigger_known_instruction(channel, user, task, text, original_question):
+    respond_to_user(channel, user, "Give me one more second...")
     response = send_task(task, attachments=[text])
-    respond_to_user(channel, user, "Here's your response: {}".format(response))
+    respond_to_user(channel, user, "Here's your response: {} (you asked: {})".format(response, original_question))
 
 def show_help_messsage(channel, tasks):
     respond(channel, "Here's what I already know how to do:")
@@ -146,7 +153,8 @@ def process_message(data):
     print(data)
     channel = data["channel"]
     text = data["text"]
-    if data['user'] == user_id:
+    user = data['user']
+    if user == user_id:
         # ignore what I say...
         return
     if channel.startswith('D'):
@@ -169,6 +177,8 @@ def process_message(data):
             return respond(channel, "Hello there!")
         if moretext.lower().replace('!', '').replace('?','') == "are you ready":
             return respond(channel, "I was born ready!")
+        if moretext.lower().replace('!', '').replace('?','') == "ping":
+            return dm_to_user(channel, user, "Pong!")
         identifier, rest = head(moretext)
         identifier = identifier.lower()
         if identifier == 'teach':
@@ -179,12 +189,12 @@ def process_message(data):
         if identifier == 'help':
             return show_help_messsage(channel, tasks)
         if any(identifier.startswith(x) for x in ['thank', '10x']):
-            respond(channel, "You're welcome, <@{}>!".format(data['user']))
+            respond(channel, "You're welcome, <@{}>!".format(user))
             return 
         if identifier in tasks:
-            return gevent.spawn(trigger_known_instruction, channel, data['user'], tasks[identifier], rest)
+            return gevent.spawn(trigger_known_instruction, channel, user, tasks[identifier], rest, moretext)
         # unknown command, use crunchable to understand what the user wants
-        gevent.spawn(handle_unrecognized_commmand, channel, data['user'], moretext)
+        gevent.spawn(handle_unrecognized_commmand, channel, user, moretext)
     except ValueError:
         return respond(channel, "Sorry, I'm not feeling so well... can you send someone to check in on me, please?")
 
