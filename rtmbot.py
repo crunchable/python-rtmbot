@@ -5,7 +5,7 @@ from argparse import ArgumentParser
 
 import yaml
 from rtmbot import RtmBot
-
+import logging
 
 def parse_args():
     parser = ArgumentParser()
@@ -21,7 +21,11 @@ def parse_args():
 args = parse_args()
 config = yaml.load(open(args.config or 'rtmbot.conf', 'r'))
 bot = RtmBot(config)
-try:
-    bot.start()
-except KeyboardInterrupt:
-    sys.exit(0)
+while True:
+    try:
+        bot.start()
+    except KeyboardInterrupt:
+        sys.exit(0)
+    except Exception as e:
+        logging.exception("Something wrong happened, restarting...") 
+
