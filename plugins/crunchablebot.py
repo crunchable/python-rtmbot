@@ -134,7 +134,7 @@ def handle_unrecognized_commmand(channel, user, text):
     trigger_known_instruction(channel, user, task, text, text)
 
 def trigger_known_instruction(channel, user, task, text, original_question):
-    respond_to_user(channel, user, "Give me one more second...")
+    respond_to_user(channel, user, "Looking for someone to answer you...")
     response = send_task(task, attachments=[text])
     respond_to_user(channel, user, "Here's your response: {} (you asked: {})".format(response, original_question))
 
