@@ -57,6 +57,7 @@ class RtmBot(object):
     def connect(self):
         """Convenience method that creates Server instance"""
         self.slack_client = SlackClient(self.token)
+        logging.info(self.slack_client)
         self.slack_client.rtm_connect()
 
     def _start(self):

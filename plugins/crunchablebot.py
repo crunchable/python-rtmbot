@@ -6,6 +6,8 @@ import os
 import json
 import gevent
 from crunchable import Crunchable
+from braceexpand import expand_braces
+import logging
 
 outputs = []
 crontabs = []
@@ -60,6 +62,13 @@ def send_task(task, attachments):
     request = client.request_free_text(attachments=attachments, **task)
     response = client.wait_for_task(request['id'])
     return response['response']
+
+def send_tasks(task, attachments):
+    client = get_crunchable_client()
+    requests = [client.request_free_text(attachments=[att], **task) for att in attachments]
+    responses = gevent.joinall([gevent.spawn(client.wait_for_task, req['id']) for req in requests])
+    return {r.value['attachments'][0]: r.value['response'] for r in responses}
+
 
 SOMETHING_ELSE = 'Nothing fits'
 NOT_A_REQUEST = 'Irrelevant/Nonsense'
@@ -135,8 +144,8 @@ def handle_unrecognized_commmand(channel, user, text):
 
 def trigger_known_instruction(channel, user, task, text, original_question):
     respond_to_user(channel, user, "Looking for someone to answer you...")
-    response = send_task(task, attachments=[text])
-    respond_to_user(channel, user, "Here's your response: {} (you asked: {})".format(response, original_question))
+    response = send_tasks(task, attachments=expand_braces(text))
+    respond_to_user(channel, user, "Here's your response: {})".format(response))
 
 def show_help_messsage(channel, tasks):
     respond(channel, "Here's what I already know how to do:")
@@ -150,8 +159,10 @@ def show_teach_instruction(channel):
     respond(channel, "For example: @crunchable-bot: teach gettimezone 'Search google for the timezone of the given city'")    
 
 def process_message(data):
-    print(data)
     channel = data["channel"]
+    if 'text' not in data:
+        logging.warn('got data with no text {}'.format(data))
+        return
     text = data["text"]
     user = data['user']
     if user == user_id:
