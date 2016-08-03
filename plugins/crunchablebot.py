@@ -164,6 +164,7 @@ def process_message(data):
         logging.warn('got data with no text {}'.format(data))
         return
     text = data["text"]
+    logging.info('crunchable sees {}'.format(text))
     user = data['user']
     if user == user_id:
         # ignore what I say...

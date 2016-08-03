@@ -39,7 +39,7 @@ class RtmBot(object):
 
         # establish logging
         log_file = config.get('LOGFILE', 'rtmbot.log')
-        logging.basicConfig(filename=log_file,
+        logging.basicConfig(filename=os.path.join(self.directory, log_file),
                             level=logging.INFO,
                             format='%(asctime)s %(message)s')
         logging.info('Initialized in: {}'.format(self.directory))
