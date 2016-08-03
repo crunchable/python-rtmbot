@@ -164,7 +164,7 @@ def process_message(data):
         logging.warn('got data with no text {}'.format(data))
         return
     text = data["text"]
-    logging.info('crunchable sees {}'.format(text))
+    logging.info('crunchable sees {}'.format(data))
     user = data['user']
     if user == user_id:
         # ignore what I say...
@@ -204,10 +204,13 @@ def process_message(data):
             respond(channel, "You're welcome, <@{}>!".format(user))
             return 
         if identifier in tasks:
+            logging.info("{} recognized as task".format(identifier))
             return gevent.spawn(trigger_known_instruction, channel, user, tasks[identifier], rest, moretext)
         if lidentifier in tasks:
+            logging.info("{} recognized as task".format(lidentifier))
             return gevent.spawn(trigger_known_instruction, channel, user, tasks[lidentifier], rest, moretext)
         # unknown command, use crunchable to understand what the user wants
+        logging.info("unrecognized identifier {}".format(moretext))
         gevent.spawn(handle_unrecognized_commmand, channel, user, moretext)
     except ValueError:
         return respond(channel, "Sorry, I'm not feeling so well... can you send someone to check in on me, please?")

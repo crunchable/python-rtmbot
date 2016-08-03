@@ -205,8 +205,9 @@ class Plugin(object):
         while True:
             if 'outputs' in dir(self.module):
                 if len(self.module.outputs) > 0:
-                    logging.info("output from {}".format(self.module))
-                    output.append(self.module.outputs.pop(0))
+                    o = self.module.outputs.pop(0)
+                    logging.info("output from {}: {}".format(self.module, o))
+                    output.append(o)
                 else:
                     break
             else:
