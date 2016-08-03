@@ -192,19 +192,21 @@ def process_message(data):
         if moretext.lower().replace('!', '').replace('?','') == "ping":
             return dm_to_user(channel, user, "Pong!")
         identifier, rest = head(moretext)
-        identifier = identifier.lower()
-        if identifier == 'teach':
+        lidentifier = identifier.lower()
+        if lidentifier == 'teach':
             return learn_new_instruction(channel, rest)
-        if identifier == 'reteach':
+        if lidentifier == 'reteach':
             return learn_new_instruction(channel, rest, override=True)
         tasks = get_tasks()
-        if identifier == 'help':
+        if lidentifier == 'help':
             return show_help_messsage(channel, tasks)
-        if any(identifier.startswith(x) for x in ['thank', '10x']):
+        if any(lidentifier.startswith(x) for x in ['thank', '10x']):
             respond(channel, "You're welcome, <@{}>!".format(user))
             return 
         if identifier in tasks:
             return gevent.spawn(trigger_known_instruction, channel, user, tasks[identifier], rest, moretext)
+        if lidentifier in tasks:
+            return gevent.spawn(trigger_known_instruction, channel, user, tasks[lidentifier], rest, moretext)
         # unknown command, use crunchable to understand what the user wants
         gevent.spawn(handle_unrecognized_commmand, channel, user, moretext)
     except ValueError:
