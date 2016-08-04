@@ -8,6 +8,10 @@ import gevent
 from crunchable import Crunchable
 from braceexpand import expand_braces
 import logging
+from threading import Lock
+from contextlib import contextmanager
+lock = Lock()
+
 
 outputs = []
 crontabs = []
@@ -15,6 +19,38 @@ user_name = None
 user_id = None
 
 FILE = "plugins/tasks.json"
+
+def get_state_file():
+    global config
+    return config.get('CRUNCHABLE_STATE', 'plugins/state.json')
+
+@contextmanager
+def get_state():
+    filename = get_state_file()
+    with lock:
+        try:
+            state = json.loads(open(filename, 'rb').read())
+        except IOError:
+            state = {}
+        if 'pending' not in state:
+            state['pending'] = {}
+        yield state
+        open(filename, 'wb').write(json.dumps(state))
+
+def store_pending(id, channel, user, identifier):
+    with get_state() as state:
+        state['pending'][id] = [channel, user, identifier]
+
+def pop_pending(id):
+    with get_state() as state:
+        try:
+            state['pending'].pop(id)
+        except KeyError:
+            logging.warn('tried to pop missing id: {}'.format(id))
+
+def read_state():
+    with get_state() as state:
+        return state
 
 def respond(channel, text):
     global outputs
@@ -63,12 +99,30 @@ def send_task(task, attachments):
     response = client.wait_for_task(request['id'])
     return response['response']
 
-def send_tasks(task, attachments):
+def wait_for_task(channel, user, client, task_id, identifier):
+    response = client.wait_for_task(task_id)
+    if response['status'] == 'complete':
+        answer = response.get('response', '')
+    else:
+        answer = response.get('cruncher_feedback')
+    respond_to_user(channel, user, "Here's your response: {} (you asked: {} {})".format(answer, identifier, response['attachments'][0]))
+    pop_pending(task_id)
+
+def send_tasks(channel, user, identifier, task, attachments):
     client = get_crunchable_client()
     requests = [client.request_free_text(attachments=[att], **task) for att in attachments]
-    responses = gevent.joinall([gevent.spawn(client.wait_for_task, req['id']) for req in requests])
-    return {r.value['attachments'][0]: r.value['response'] for r in responses}
+    [store_pending(req['id'], channel, user, identifier) for req in requests]
+    [gevent.spawn(wait_for_task, channel, user, client, req['id'], identifier) for req in requests]
 
+def recover_state():
+    state = read_state()
+    pending = state.get('pending', {})
+    client = get_crunchable_client()
+    for (id, [channel, user, identifier]) in pending.iteritems():
+        gevent.spawn(wait_for_task, channel, user, client, id, identifier)
+
+def setup():
+    recover_state()
 
 SOMETHING_ELSE = 'Nothing fits'
 NOT_A_REQUEST = 'Irrelevant/Nonsense'
@@ -112,7 +166,7 @@ def crunchable_autolearn_task(channel, user, text):
     add_new_task(identifier, task)
     dm_to_user(channel, user, "I learned something new today!")
     dm_to_user(channel, user, "@crunchable-bot {} <text> --- {}".format(identifier, instruction))
-    trigger_known_instruction(channel, user, task, text, text)
+    trigger_known_instruction(channel, user, task, text, identifier)
 
 def learn_new_instruction(channel, text, override=False):
     identifier, instruction = head(text)
@@ -140,12 +194,11 @@ def handle_unrecognized_commmand(channel, user, text):
     tasks = get_tasks()
     identifier = task_identifier.split(':')[0]
     task = tasks[identifier]
-    trigger_known_instruction(channel, user, task, text, text)
+    trigger_known_instruction(channel, user, task, text, identifier)
 
-def trigger_known_instruction(channel, user, task, text, original_question):
-    respond_to_user(channel, user, "Looking for someone to answer you...")
-    response = send_tasks(task, attachments=expand_braces(text))
-    respond_to_user(channel, user, "Here's your response: {})".format(response))
+def trigger_known_instruction(channel, user, task, text, identifier):
+    respond_to_user(channel, user, "Please wait while I look for someone to answer you...")
+    send_tasks(channel, user, identifier, task, attachments=expand_braces(text))
 
 def show_help_messsage(channel, tasks):
     respond(channel, "Here's what I already know how to do:")
@@ -205,10 +258,10 @@ def process_message(data):
             return 
         if identifier in tasks:
             logging.info("{} recognized as task".format(identifier))
-            return gevent.spawn(trigger_known_instruction, channel, user, tasks[identifier], rest, moretext)
+            return gevent.spawn(trigger_known_instruction, channel, user, tasks[identifier], rest, identifier)
         if lidentifier in tasks:
             logging.info("{} recognized as task".format(lidentifier))
-            return gevent.spawn(trigger_known_instruction, channel, user, tasks[lidentifier], rest, moretext)
+            return gevent.spawn(trigger_known_instruction, channel, user, tasks[lidentifier], rest, identifier)
         # unknown command, use crunchable to understand what the user wants
         logging.info("unrecognized identifier {}".format(moretext))
         gevent.spawn(handle_unrecognized_commmand, channel, user, moretext)

@@ -7,6 +7,7 @@ import time
 import logging
 
 from slackclient import SlackClient
+from websocket import WebSocketConnectionClosedException
 
 sys.dont_write_bytecode = True
 
@@ -65,12 +66,16 @@ class RtmBot(object):
         self.load_plugins()
         self.get_user_info()
         while True:
-            for reply in self.slack_client.rtm_read():
-                self.input(reply)
-            self.crons()
-            self.output()
-            self.autoping()
-            time.sleep(.1)
+            try:
+                for reply in self.slack_client.rtm_read():
+                    self.input(reply)
+                self.crons()
+                self.output()
+                self.autoping()
+                time.sleep(.1)
+            except WebSocketConnectionClosedException as e:
+                logging.exception("websocket connection was closed: {}".format(e))
+                self.slack_client.rtm_connect()
    
     def get_user_info(self):
         user_info = self.slack_client.api_call('auth.test')
