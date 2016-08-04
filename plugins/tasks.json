@@ -1,12 +1,24 @@
 {
+  "checkflights": {
+    "instruction": "1. Go to <http://kayak.com> and search for flights that fit the from/to/date information given.\n\n2. Then go to google and search for \"on time information for flights\" and lookup the statistics per flight that you found above.\n\n3. Respond with information about each flight you found: airline name, flight number, origin airport, takeoff time, on-time %  per flight you found above. If you could not find the on-time stats then just write 'on-time stats not found'.\n\nIf you cannot find any flights that fits the given requirements, just respond with 'no flights found'."
+  }, 
+  "travel&lt;from,": {
+    "instruction": "to&gt; \u2018open <http://maps.google.com>, check for travel times between **from** and **to**. output should be the list of options: walk, public transport, car with durations for each and the bus/subway identity and start location for the public transport'"
+  }, 
   "findfounders": {
     "instruction": "Search for the company name mentioned in the attachment in <http://crunchbase.com> and look for name of the founders.\nIf the copmany is not found in crunchbase.com, try to research <http://linkedin.com> and find out who is the founder of that company."
+  }, 
+  "maleorfem": {
+    "instruction": "Is this person Male of Female?"
+  }, 
+  "headof": {
+    "instruction": "- &lt;SKILL&gt; &lt;COMPANY&gt;\n\nreturn a list of lines, each representing a person, with a pipe (\u201c|\u201d) separated list of COMPANY, SKILL, First Name, Last Name, Title, LinkedIn URL\n\n1. open &lt;http://linkedin.com&gt; and use the search function.\n\na) search for: COMPANY vp SKILL\nb) search for: COMPANY vice president SKILL\nc) search for: COMPANY Chief SKILL Officer\nd) search for: COMPANY cXo with X being the first letter of SKILL.\n\nfor example, if the user ran \"headof product moovit\", you should search for: \"moovit VP product\u201d, \u201cmoovit vice president product\u201d, \u201cmoovit chief product officer\u201d, \u201cmoovit CPO\". if searching for the marketing head, these would be \"moovit vp marketing\u201d etc.\n\nif there is more than one role, return all of them."
   }, 
   "find_linkedin_profile": {
     "instruction": "go to <http://linkedin.com> and look for the given name. return the URL as the response."
   }, 
-  "maleorfem": {
-    "instruction": "Is this person Male of Female?"
+  "FindEmail": {
+    "instruction": "Please locate the **email address** of the attached person, and tell us **how you found it**\n\nWe do **NOT** want their LinkedIn profile, or their Twitter username (for example @name).\n\nWe are looking for something in the format name@company.com \n\n ### Guide for locatin email addresses:\n\n1.  Google for \"<Name> email\", with optionally the additional hint parameter. \n2. Scan the results of the first Google page to find an email address for that person. \n3. If you didn't find an mail using google, open <http://linkedin.com> and search for the person name. and find out where he works.\n4. Go to <https://emailhunter.co/> and enter the domain name of his company (for example if he works at wix you would enter 'wix.com'. This website will show you email addresses of other people in the same company, so you can guess how an email address looks like in that company (for example it could be name@company.com or name.lastname@company.com etc.)\n5. Use that template to guess what would be the email of the person we are looking for."
   }, 
   "gettimezone": {
     "instruction": "'Search google for the timezone of the given city'"
