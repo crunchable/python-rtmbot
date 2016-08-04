@@ -8,7 +8,7 @@ def expand_braces(text):
         return
 
     brace = braces[0]
-    options = brace.split(',')
+    options = brace.split('|')
     for option in options:
         replaced = BRACES_RE.sub(option, text, count=1)
         for sub_opt in expand_braces(replaced):
