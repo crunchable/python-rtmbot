@@ -220,7 +220,8 @@ def process_message(data):
     text = data["text"]
     if 'user' not in data:
         logging.warn('got data with no user {}'.format(data))
-        user = data['user']
+        return
+    user = data['user']
     if user == user_id:
         # ignore what I say...
         return
