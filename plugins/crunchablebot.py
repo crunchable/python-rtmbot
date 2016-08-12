@@ -213,27 +213,30 @@ def show_teach_instruction(channel):
 
 def process_message(data):
     channel = data["channel"]
+    logging.info('crunchable sees {}'.format(data))
     if 'text' not in data:
         logging.warn('got data with no text {}'.format(data))
         return
     text = data["text"]
-    logging.info('crunchable sees {}'.format(data))
-    user = data['user']
+    if 'user' not in data:
+        logging.warn('got data with no user {}'.format(data))
+        user = data['user']
     if user == user_id:
         # ignore what I say...
         return
+    possible_names = {'crunchable', '<@{}>:'.format(user_id), '<@{}>'.format(user_id), user_name}
     if channel.startswith('D'):
         # private chat
         try:
             myname, moretext = head(text)
-            if myname not in ['crunchable', '<@{}>:'.format(user_id), user_name]:
+            if myname not in possible_names:
                 moretext = text 
         except ValueError:
             moretext = text
     else:
         try:
             myname, moretext = head(text)
-            if myname not in ['crunchable', '<@{}>:'.format(user_id), user_name]:
+            if myname not in possible_names:
                 return
         except ValueError:
             return
