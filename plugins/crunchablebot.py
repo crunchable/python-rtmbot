@@ -105,7 +105,8 @@ def wait_for_task(channel, user, client, task_id, identifier):
         answer = response.get('response', '')
     else:
         answer = response.get('cruncher_feedback')
-    respond_to_user(channel, user, "Here's your response: {} (you asked: {} {})".format(answer, identifier, response['attachments'][0]))
+    respond_to_user(channel, user, "Here's your response (you asked: {} {})".format(identifier, response['attachments'][0]))
+    respond_to_user(channel, user, "{}".format(answer))
     pop_pending(task_id)
 
 def send_tasks(channel, user, identifier, task, attachments):
