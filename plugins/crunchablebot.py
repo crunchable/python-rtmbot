@@ -260,13 +260,13 @@ def process_message(data):
             return show_help_messsage(channel, tasks)
         if any(lidentifier.startswith(x) for x in ['thank', '10x']):
             respond(channel, "You're welcome, <@{}>!".format(user))
-            return 
+            return
+        lowercase_to_originalcase = {task_id.lower(): task_id for task_id in tasks}
+        if lidentifier in lowercase_to_originalcase:
+            identifier = lowercase_to_originalcase[lidentifier]
         if identifier in tasks:
             logging.info("{} recognized as task".format(identifier))
             return gevent.spawn(trigger_known_instruction, channel, user, tasks[identifier], rest, identifier)
-        if lidentifier in tasks:
-            logging.info("{} recognized as task".format(lidentifier))
-            return gevent.spawn(trigger_known_instruction, channel, user, tasks[lidentifier], rest, identifier)
         # unknown command, use crunchable to understand what the user wants
         logging.info("unrecognized identifier {}".format(moretext))
         gevent.spawn(handle_unrecognized_commmand, channel, user, moretext)
