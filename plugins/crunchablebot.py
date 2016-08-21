@@ -10,6 +10,7 @@ from braceexpand import expand_braces
 import logging
 from threading import Lock
 from contextlib import contextmanager
+import datetime
 lock = Lock()
 
 
@@ -55,6 +56,10 @@ def read_state():
 def respond(channel, text):
     global outputs
     outputs.append([channel, text])
+
+def send_file(channel, content, filetype, filename):
+    global outputs
+    outputs.append([channel, 'FILE', content, filetype, filename])
 
 def respond_to_user(channel, user, text):
     if channel.startswith('D'): #private chat
@@ -106,14 +111,21 @@ def wait_for_task(channel, user, client, task_id, identifier):
     else:
         answer = response.get('cruncher_feedback')
     respond_to_user(channel, user, "Here's your response (you asked: {} {})".format(identifier, response['attachments'][0]))
-    respond_to_user(channel, user, "{}".format(answer))
+    respond(channel, "{}".format(answer))
     pop_pending(task_id)
+    return (identifier, response['attachments'][0], answer)
 
 def send_tasks(channel, user, identifier, task, attachments):
     client = get_crunchable_client()
     requests = [client.request_free_text(attachments=[att], **task) for att in attachments]
     [store_pending(req['id'], channel, user, identifier) for req in requests]
-    [gevent.spawn(wait_for_task, channel, user, client, req['id'], identifier) for req in requests]
+    asyncs = [gevent.spawn(wait_for_task, channel, user, client, req['id'], identifier) for req in requests]
+    if len(asyncs) > 1:
+        responses = gevent.joinall(asyncs)
+        lines = [','.join(response.value) for response in responses]
+        content = '\n'.join(lines)
+        respond_to_user(channel, user, 'And to summarize:')
+        send_file(channel, content, 'csv', 'crunchable-responses-{}.csv'.format(datetime.datetime.now().isoformat()))
 
 def recover_state():
     state = read_state()

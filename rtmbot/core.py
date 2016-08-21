@@ -125,6 +125,12 @@ class RtmBot(object):
                             dm_channel.send_message(text)
                         except Exception as e:
                             logging.error('error sending DM: {}'.format(e))
+                    elif output[1] == 'FILE':
+                        try:
+                            content, filetype, filename = output[2:]
+                            self.slack_client.server.api_call('files.upload', content=content, filetype=filetype, filename=filename, channels=[channel.id])                            
+                        except Exception as e:
+                            logging.error('error sending DM: {}'.format(e))
                     else:
                         channel.send_message(output[1])
                     limiter = True
