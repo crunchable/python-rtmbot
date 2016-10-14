@@ -1,6 +1,6 @@
 import re
 
-BRACES_RE = re.compile("\{(.*?)\}")
+BRACES_RE = re.compile("\{(.*?)\}", re.DOTALL)
 def expand_braces(text):
     braces = BRACES_RE.findall(text)
     if len(braces) == 0:
