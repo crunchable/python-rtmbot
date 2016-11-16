@@ -99,6 +99,7 @@ class RtmBot(object):
 
     def input(self, data):
         if "type" in data:
+            data['__slack_client'] = self.slack_client
             function_name = "process_" + data["type"]
             self._dbg("got {}".format(function_name))
             for plugin in self.bot_plugins:

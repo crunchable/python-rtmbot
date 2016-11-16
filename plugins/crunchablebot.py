@@ -213,6 +213,15 @@ def trigger_known_instruction(channel, user, task, text, identifier):
     respond_to_user(channel, user, "Please wait while I look for someone to answer you...")
     send_tasks(channel, user, identifier, task, attachments=expand_braces(text))
 
+def trigger_internal_fetch(channel, user, text, slack_client):
+    users_to_fetch = text.split()
+    respond_to_user(channel, user, "Sure, I'll fetch him for you! hang tight!")
+    client = get_crunchable_client()
+
+    username = slack_client.api_call('users.info', user=user)['user']['name']
+    for user in users_to_fetch:
+        client.request_multiple_choice(instruction="Please contact {} on Slack. Thanks!".format(username), choices=["Sure!", "OK!"], min_answers=1, max_answers=1, choices_type="text", tags=[user])
+
 def show_help_messsage(channel, tasks):
     respond(channel, "Here's what I already know how to do:")
     for identifier, task in tasks.iteritems():
@@ -273,6 +282,9 @@ def process_message(data):
         if any(lidentifier.startswith(x) for x in ['thank', '10x']):
             respond(channel, "You're welcome, <@{}>!".format(user))
             return
+        if config.get('internal', False):
+            if lidentifier == 'fetch':
+                return gevent.spawn(trigger_internal_fetch, channel, user, rest, data['__slack_client'])
         lowercase_to_originalcase = {task_id.lower(): task_id for task_id in tasks}
         if lidentifier in lowercase_to_originalcase:
             identifier = lowercase_to_originalcase[lidentifier]
