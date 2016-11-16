@@ -282,9 +282,11 @@ def process_message(data):
         if any(lidentifier.startswith(x) for x in ['thank', '10x']):
             respond(channel, "You're welcome, <@{}>!".format(user))
             return
-        if config.get('internal', False):
-            if lidentifier == 'fetch':
+        if lidentifier == 'fetch':
+            if config.get('internal', False):
                 return gevent.spawn(trigger_internal_fetch, channel, user, rest, data['__slack_client'])
+            else:
+                return respond_to_user(channel, user, "I'm not sure what you want me to do...")
         lowercase_to_originalcase = {task_id.lower(): task_id for task_id in tasks}
         if lidentifier in lowercase_to_originalcase:
             identifier = lowercase_to_originalcase[lidentifier]
