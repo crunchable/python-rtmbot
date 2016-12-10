@@ -220,7 +220,7 @@ def trigger_internal_fetch(channel, user, text, slack_client):
 
     username = slack_client.api_call('users.info', user=user)['user']['name']
     for user in users_to_fetch:
-        client.request_multiple_choice(instruction="Please contact {} on Slack. Thanks!".format(username), choices=["Sure!", "OK!"], min_answers=1, max_answers=1, choices_type="text", tags=[user])
+        client.request_multiple_choice(instruction="Please contact {} on Slack. Thanks!".format(username), choices=["Sure!", "OK!"], min_answers=1, max_answers=1, choices_type="text", tags=[user], priority=10)
 
 def show_help_messsage(channel, tasks):
     respond(channel, "Here's what I already know how to do:")
