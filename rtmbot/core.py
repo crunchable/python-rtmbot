@@ -5,12 +5,19 @@ import glob
 import os
 import time
 import logging
+import json
+import itertools
 
 from slackclient import SlackClient
 from websocket import WebSocketConnectionClosedException
 
 sys.dont_write_bytecode = True
 
+counter = itertools.count(1)
+
+def channel_send_message(channel, message):
+    global counter
+    return channel.server.websocket.send(json.dumps({'id': counter.next(), 'type': 'message', 'text': message, 'channel': channel.id}))
 
 class RtmBot(object):
     def __init__(self, config):
@@ -123,7 +130,7 @@ class RtmBot(object):
                             dm_channel_request = self.slack_client.api_call('im.open', user=user)
                             dm_channel_id = dm_channel_request['channel']['id']
                             dm_channel = self.slack_client.server.channels.find(dm_channel_id)
-                            dm_channel.send_message(text)
+                            channel_send_message(dm_channel, text)
                         except Exception as e:
                             logging.error('error sending DM: {}'.format(e))
                     elif output[1] == 'FILE':
@@ -133,7 +140,7 @@ class RtmBot(object):
                         except Exception as e:
                             logging.error('error sending DM: {}'.format(e))
                     else:
-                        channel.send_message(output[1])
+                        channel_send_message(channel, output[1])
                     limiter = True
 
     def crons(self):
